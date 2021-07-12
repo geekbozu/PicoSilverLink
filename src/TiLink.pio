@@ -1,0 +1,89 @@
+.program TiLink
+.side_set 3 opt pindirs
+
+public txrx:
+    .wrap_target
+    mov x,   status side 0
+    jmp !x txstart
+    set y, 3 
+    in pins, 2
+    mov x, ::isr
+    mov isr,null
+    jmp X!=Y rxstart
+    .wrap
+
+txstart:
+    pull
+byteloop:
+    out x, 1
+    jmp !X, tx_0_bit
+    wait 0 pin 0 side 2
+    jmp bit_final_stage
+tx_0_bit:
+    set pindirs,1
+    wait 0 pin 1
+bit_final_stage:
+    wait 1 pin 0 side 0
+    wait 1 pin 1
+    jmp !OSRE byteloop
+    jmp txrx
+
+rxstart:
+    set x, 7
+innerrx:
+    wait 0 irq 2
+    in pins, 1
+    jmp pin ifRed
+    wait 1 pin 0 side 2
+    jmp endrx
+ifRed:
+    wait 1 pin 1 side 1
+endrx:
+    set pindirs, 0
+    irq 2
+    jmp x-- innerrx
+    irq 0
+    jmp txrx
+
+
+.program pinwatch
+public pinwatch:
+    .wrap_target
+    wait 0 pin 0
+    irq clear 2
+    .wrap
+
+
+% c-sdk {
+// this is a raw helper function for use by the user which sets up the GPIO output, and configures the SM to output on a particular pin
+void TiLink_program_init(PIO pio, uint sm, uint offset, uint pin) {
+   pio_gpio_init(pio, pin);
+   pio_sm_set_consecutive_pindirs(pio, sm, pin, 2, true);
+
+   pio_sm_config c = TiLink_program_get_default_config(offset);
+   sm_config_set_set_pins(&c, pin, 2);
+
+   //Set out pins 2, and 8 auto count 
+   sm_config_set_out_pins(&c,pin,2);
+   sm_config_set_out_shift(&c,true,false,8);
+   //In Pins
+    sm_config_set_in_pins(&c,pin);
+   //Set Status register to show when there is 1 or more items in tx buffer
+   sm_config_set_mov_status(&c,STATUS_TX_LESSTHAN,1);
+   //Set shift right, Autopull, 8
+   sm_config_set_in_shift(&c,true,true,8);
+   sm_config_set_jmp_pin(&c,pin);
+   sm_config_set_clkdiv(&c,clock_get_hz(clk_sys)/450000);
+   sm_config_set_sideset_pins(&c,pin);
+   pio_sm_init(pio, sm, offset, &c);
+
+}
+
+void pinwatch_program_init(PIO pio, uint sm, uint offset, uint pin) {
+   pio_sm_config c = pinwatch_program_get_default_config(offset);
+   sm_config_set_clkdiv(&c,clock_get_hz(clk_sys)/450000);
+   sm_config_set_in_pins(&c,pin);
+   pio_sm_init(pio, sm, offset, &c);
+}
+
+%}

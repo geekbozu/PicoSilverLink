@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.13)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
-
+set(PICO_DEOPTIMIZED_DEBUG 0)
 # initalize pico_sdk from installed location
 # (note this can come from environment, CMake cache etc)
 set(PICO_SDK_PATH "C:/Users/geek/Documents/Pico/pico-sdk")
@@ -30,6 +30,7 @@ pico_set_program_version(SilverLink "0.1")
 pico_enable_stdio_uart(SilverLink 1)
 pico_enable_stdio_usb(SilverLink 0)
 
+
 pico_generate_pio_header(SilverLink ${CMAKE_CURRENT_LIST_DIR}/src/TiLink.pio)
 
 target_include_directories(SilverLink PRIVATE src)
@@ -45,6 +46,7 @@ target_link_libraries(SilverLink
         hardware_uart
         tinyusb_device
         tinyusb_board
+        hardware_timer
         )
 
 pico_add_extra_outputs(SilverLink)

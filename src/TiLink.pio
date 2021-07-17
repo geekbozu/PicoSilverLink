@@ -73,7 +73,7 @@ void TiLink_program_init(PIO pio, uint sm, uint offset, uint pin) {
    //Set shift right, Autopull, 8
    sm_config_set_in_shift(&c,true,true,8);
    sm_config_set_jmp_pin(&c,pin);
-   sm_config_set_clkdiv(&c,clock_get_hz(clk_sys)/600000);
+   sm_config_set_clkdiv(&c,clock_get_hz(clk_sys)/700000);
    sm_config_set_sideset_pins(&c,pin);
    pio_sm_init(pio, sm, offset, &c);
 
@@ -81,7 +81,7 @@ void TiLink_program_init(PIO pio, uint sm, uint offset, uint pin) {
 
 void pinwatch_program_init(PIO pio, uint sm, uint offset, uint pin) {
    pio_sm_config c = pinwatch_program_get_default_config(offset);
-   sm_config_set_clkdiv(&c,clock_get_hz(clk_sys)/600000);
+  // sm_config_set_clkdiv(&c,clock_get_hz(clk_sys)/600000);
    sm_config_set_in_pins(&c,pin);
    pio_sm_init(pio, sm, offset, &c);
 }
